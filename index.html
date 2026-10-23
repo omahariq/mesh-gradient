@@ -318,8 +318,6 @@ input[type=range]::-moz-range-thumb {
 .btn.danger { color: #ff8b8b; }
 .btn.sq { flex: none; width: 36px; padding: 0; }
 .pt-divider { height: 1px; margin: 14px 0 8px; background: var(--line); }
-.btn.light { background: #ececee; color: #111113; box-shadow: none; font-weight: 600; }
-@media (hover: hover) { .btn.light:not(:disabled):hover { background: #fff; } }
 .check { display: flex; align-items: center; gap: 8px; margin-top: 10px; color: var(--muted); font-size: 12px; cursor: pointer; }
 .check input { width: 14px; height: 14px; margin: 0; accent-color: var(--accent); cursor: pointer; }
 
@@ -559,7 +557,7 @@ select.field { appearance: none; width: 100%; padding-right: 24px; cursor: point
             <option value="earthy">Earthy</option>
             <option value="mono">Monochrome</option>
           </select>
-          <button class="btn light" id="genBtn" title="Generate a new palette and apply it to your points (G)">Generate</button>
+          <button class="btn code-btn" id="genBtn" title="Generate a new palette and apply it to your points (G)">Generate</button>
           <button class="btn sq" id="palShuffle" title="Shuffle colors between points (S)" aria-label="Shuffle colors between points"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M4 20 21 3"/><path d="M21 16v5h-5"/><path d="m15 15 6 6"/><path d="M4 4l5 5"/></svg></button>
         </div>
         <div class="pt-divider"></div>
