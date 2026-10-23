@@ -77,7 +77,10 @@ button { -webkit-tap-highlight-color: transparent; }
 .icon-btn svg { width: 16px; height: 16px; }
 .icon-btn.sm { width: 26px; height: 26px; border-radius: 6px; }
 .icon-btn.sm svg { width: 14px; height: 14px; }
-.icon-btn[aria-pressed="true"] { color: var(--text); background: var(--panel-3); }
+.icon-btn[aria-pressed="true"] { color: var(--text); }
+/* off toggles also get a slash through the icon, so state never rests on color alone */
+.icon-btn .slash { display: none; }
+.icon-btn[aria-pressed="false"] .slash { display: inline; }
 .icon-btn:disabled { opacity: .35; cursor: default; }
 @media (hover: hover) {
   .icon-btn:not(:disabled):hover { background: var(--panel-3); color: var(--text); }
@@ -129,7 +132,13 @@ button { -webkit-tap-highlight-color: transparent; }
   width: 20px; height: 20px;
   box-shadow: 0 0 0 2.5px #fff, 0 0 0 5px var(--accent), 0 4px 14px rgba(0, 0, 0, .5);
 }
-.handle.drop-hover .dot { box-shadow: 0 0 0 2.5px #fff, 0 0 0 6px var(--accent); }
+.handle.linked { z-index: 4; }
+.handle.linked .dot {
+  width: 24px; height: 24px;
+  box-shadow: 0 0 0 2.5px #fff, 0 0 0 9px rgba(255, 255, 255, .3), 0 8px 24px rgba(0, 0, 0, .6);
+}
+.handle.linked.sel .dot { box-shadow: 0 0 0 2.5px #fff, 0 0 0 5px var(--accent), 0 0 0 12px rgba(255, 255, 255, .25), 0 8px 24px rgba(0, 0, 0, .6); }
+@media (prefers-reduced-motion: reduce) { .handle .dot { transition-property: box-shadow; } }
 .ring {
   position: absolute; border-radius: 50%; pointer-events: none; z-index: 1;
   border: 1.5px dashed rgba(255, 255, 255, .7);
@@ -282,6 +291,7 @@ input[type=range]::-moz-range-thumb {
   transition-property: background-color; transition-duration: 120ms;
 }
 .pt-row.sel { background: var(--panel-3); box-shadow: inset 0 0 0 1px var(--line-2); }
+.pt-row.linked:not(.sel) { background: var(--panel-2); }
 @media (hover: hover) { .pt-row:not(.sel):hover { background: var(--panel-2); } }
 .pt-row .idx { width: 14px; color: var(--faint); font-size: 11px; text-align: right; font-variant-numeric: tabular-nums; }
 .pt-row .field { flex: 1; height: 30px; }
@@ -351,7 +361,18 @@ select.field { appearance: none; width: 100%; padding-right: 24px; cursor: point
 }
 .pop.entering { opacity: 0; scale: .97; }
 @media (prefers-reduced-motion: reduce) { .pop.entering { scale: 1; } }
-.pop-head { display: flex; align-items: center; justify-content: space-between; margin: -2px -2px 10px 2px; }
+.pop-head { display: flex; align-items: center; justify-content: space-between; margin: -5px -2px 7px 2px; position: relative; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
+.pop.moving .pop-head { cursor: grabbing; }
+.pop-head .icon-btn.sm { width: 24px; height: 24px; }
+.pop-grip {
+  /* the head is shifted 2px right by its margins, so step back 2px to sit on the card's center */
+  position: absolute; top: 50%; left: calc(50% - 2px); translate: -50% -50%; display: flex; pointer-events: none;
+  color: var(--faint); opacity: 0; transition-property: opacity; transition-duration: 150ms; transition-timing-function: ease-out;
+}
+.pop-grip svg { width: 16px; height: 8px; }
+.pop.moving .pop-grip, .pop:focus-within .pop-grip { opacity: 1; }
+@media (hover: hover) { .pop:hover .pop-grip { opacity: 1; } }
+@media (hover: none) { .pop-grip { opacity: 1; } }
 .pop-title { font-weight: 600; font-size: 12.5px; display: flex; align-items: center; gap: 8px; }
 .sv {
   position: relative; height: 150px; border-radius: 8px; cursor: crosshair; touch-action: none;
@@ -460,8 +481,8 @@ select.field { appearance: none; width: 100%; padding-right: 24px; cursor: point
       <button class="icon-btn" id="redoBtn" title="Redo (⇧⌘Z)" aria-label="Redo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg></button>
     </div>
     <div class="toolgroup">
-      <button class="icon-btn" id="handlesBtn" title="Show handles (H)" aria-label="Show handles" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button>
-      <button class="icon-btn" id="bleedBtn" title="Show gradient outside the canvas (B)" aria-label="Show outside canvas" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="10" height="10" rx="1.5"/><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/></svg></button>
+      <button class="icon-btn" id="handlesBtn" title="Show handles (H)" aria-label="Show handles" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path class="slash" d="M4 4l16 16"/></svg></button>
+      <button class="icon-btn" id="bleedBtn" title="Show gradient outside the canvas (B)" aria-label="Show outside canvas" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="10" height="10" rx="1.5"/><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path class="slash" d="M4 4l16 16"/></svg></button>
     </div>
   </div>
 
@@ -606,7 +627,8 @@ select.field { appearance: none; width: 100%; padding-right: 24px; cursor: point
 
 <!-- Color / point popover -->
 <div class="pop" id="pop" hidden role="dialog" aria-label="Edit color">
-  <div class="pop-head">
+  <div class="pop-head" title="Drag to move · double-click to snap back">
+    <span class="pop-grip" aria-hidden="true"><svg viewBox="0 0 24 12" fill="currentColor"><circle cx="5" cy="3" r="1.7"/><circle cx="12" cy="3" r="1.7"/><circle cx="19" cy="3" r="1.7"/><circle cx="5" cy="9" r="1.7"/><circle cx="12" cy="9" r="1.7"/><circle cx="19" cy="9" r="1.7"/></svg></span>
     <span class="pop-title"><span id="popTitle">Point</span></span>
     <button class="icon-btn sm" id="popClose" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   </div>
@@ -886,7 +908,7 @@ function fromPreset(pr, w = 1600, h = 1600) {
 }
 
 let state = loadSaved() || fromPreset(PRESETS[0]);
-const ui = { sel: null, handles: true, bleed: true, fmt: 'png', scale: 2, q: 0.92, svgMode: 'vector', pop: null, disp: { w: 0, h: 0 } };
+const ui = { sel: null, linked: null, handles: true, bleed: true, fmt: 'png', scale: 2, q: 0.92, svgMode: 'vector', pop: null, disp: { w: 0, h: 0 } };
 
 const STORAGE_OK = (() => {
   try { localStorage.setItem('mesh-gradient:test', '1'); localStorage.removeItem('mesh-gradient:test'); return true; } catch { return false; }
@@ -1021,6 +1043,7 @@ function renderOverlay() {
     el.style.left = cx + 'px'; el.style.top = cy + 'px';
     el.style.setProperty('--c', p.color);
     el.classList.toggle('sel', p.id === ui.sel);
+    el.classList.toggle('linked', p.id === ui.linked);
     el.title = off ? `${p.color} — off-screen, drag to bring back` : p.color;
   }
   $$('.handle', overlay).forEach(el => { if (!seen.has(el.dataset.id)) el.remove(); });
@@ -1148,6 +1171,20 @@ overlay.addEventListener('wheel', e => {
   commitSoon();
 }, { passive: false });
 
+// Linked hover: a Colors row and its point on the canvas light up together
+function setLinked(id) {
+  if (ui.linked === id) return;
+  ui.linked = id;
+  $$('.handle', overlay).forEach(el => el.classList.toggle('linked', el.dataset.id === id));
+  $$('.pt-row').forEach(el => el.classList.toggle('linked', el.dataset.id === id));
+}
+$('#ptList').addEventListener('pointerover', e => setLinked(e.target.closest('.pt-row')?.dataset.id ?? null));
+$('#ptList').addEventListener('pointerleave', () => { if (!$('#ptList').contains(document.activeElement)) setLinked(null); });
+$('#ptList').addEventListener('focusin', e => setLinked(e.target.closest('.pt-row')?.dataset.id ?? null));
+$('#ptList').addEventListener('focusout', e => { if (!$('#ptList').contains(e.relatedTarget)) setLinked(null); });
+overlay.addEventListener('pointerover', e => { if (!drag) setLinked(e.target.closest('.handle')?.dataset.id ?? null); });
+overlay.addEventListener('pointerleave', () => { if (!drag) setLinked(null); });
+
 overlay.addEventListener('dblclick', e => {
   const h = e.target.closest('.handle');
   if (h) openPointPop(h.dataset.id);
@@ -1235,8 +1272,15 @@ function focusPopFrom(trigger) {
   popReturnFocus = trigger;
   $('#popHex').focus({ preventScroll: true });
 }
+// Where the person dragged the editor; it stays there until they double-click its title bar
+let popPin = null;
 function placePop() {
   if (!ui.pop || pop.hidden) return;
+  if (popPin) {
+    const x = clamp(popPin.x, 8, innerWidth - pop.offsetWidth - 8), y = clamp(popPin.y, 8, innerHeight - pop.offsetHeight - 8);
+    pop.style.left = x + 'px'; pop.style.top = y + 'px';
+    return;
+  }
   let a;
   if (ui.pop.kind === 'bg') a = $('#bgSwatch').getBoundingClientRect();
   else { const el = $(`.handle[data-id="${ui.pop.id}"]`, overlay); if (!el) return; a = el.getBoundingClientRect(); }
@@ -1248,6 +1292,20 @@ function placePop() {
   pop.style.left = left + 'px'; pop.style.top = top + 'px';
   pop.style.transformOrigin = left > a.left ? 'left top' : 'right top';
 }
+
+$('.pop-head').addEventListener('pointerdown', e => {
+  if (e.button !== 0 || e.target.closest('button')) return;
+  e.preventDefault();
+  const head = e.currentTarget, r = pop.getBoundingClientRect();
+  const dx = e.clientX - r.left, dy = e.clientY - r.top;
+  head.setPointerCapture(e.pointerId);
+  pop.classList.add('moving');
+  const move = ev => { popPin = { x: ev.clientX - dx, y: ev.clientY - dy }; placePop(); };
+  const up = () => { pop.classList.remove('moving'); head.removeEventListener('pointermove', move); head.removeEventListener('pointerup', up); head.removeEventListener('pointercancel', up); };
+  head.addEventListener('pointermove', move); head.addEventListener('pointerup', up); head.addEventListener('pointercancel', up);
+});
+$('.pop-head').addEventListener('dblclick', e => { if (e.target.closest('button')) return; popPin = null; placePop(); });
+window.addEventListener('resize', placePop);
 
 function dragArea(el, onMove) {
   el.addEventListener('pointerdown', e => {
@@ -1488,7 +1546,7 @@ function renderPoints() {
   $('#ptCount').textContent = `${state.points.length}/${MAX_POINTS}`;
   $('#addPointBtn').disabled = state.points.length >= MAX_POINTS;
   $('#ptList').innerHTML = state.points.map((p, i) => `
-    <div class="pt-row${p.id === ui.sel ? ' sel' : ''}" data-id="${p.id}">
+    <div class="pt-row${p.id === ui.sel ? ' sel' : ''}${p.id === ui.linked ? ' linked' : ''}" data-id="${p.id}">
       <span class="idx">${i + 1}</span>
       <button class="swatch" style="--c:${p.color}" aria-label="Edit color of point ${i + 1}"></button>
       <label class="field"><span class="pre">#</span><input class="mono hex-in" value="${p.color.slice(1).toUpperCase()}" spellcheck="false" maxlength="9" aria-label="Point ${i + 1} hex"></label>
